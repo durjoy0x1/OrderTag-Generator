@@ -1,19 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>OrderTag Generator</title>
 
-<style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<style>
 * {
   box-sizing: border-box;
 }
@@ -23,7 +18,6 @@ body {
   padding: 20px;
   background: #f4f4f5;
   font-family: Arial, sans-serif;
-  color: #111;
 }
 
 .container {
@@ -33,43 +27,36 @@ body {
 
 .card {
   background: white;
-  padding: 22px;
-  border-radius: 18px;
-  box-shadow: 0 5px 25px rgba(0,0,0,.08);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.08);
 }
 
 h1 {
   text-align: center;
   margin-top: 0;
-  font-size: 30px;
 }
 
 textarea {
   width: 100%;
-  min-height: 220px;
-  padding: 15px;
+  min-height: 180px;
+  padding: 14px;
   border: 1px solid #ddd;
-  border-radius: 12px;
+  border-radius: 10px;
+  font-size: 15px;
   resize: vertical;
-  font-size: 16px;
-  outline: none;
-}
-
-textarea:focus {
-  border-color: #111;
 }
 
 button {
   width: 100%;
-  padding: 15px;
+  padding: 14px;
   margin-top: 12px;
-  border: none;
-  border-radius: 12px;
+  border: 0;
+  border-radius: 10px;
   background: #111;
   color: white;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: bold;
-  cursor: pointer;
 }
 
 button:disabled {
@@ -78,46 +65,33 @@ button:disabled {
 
 .result {
   display: none;
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
-.order-id {
+.orderId {
   text-align: center;
-  font-size: 27px;
+  font-size: 25px;
   font-weight: bold;
-  background: #f1f1f1;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 15px;
+  background: #eee;
+  border-radius: 10px;
 }
 
 pre {
-  background: #18181b;
-  color: white;
-  padding: 16px;
-  border-radius: 12px;
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 15px;
+  background: #18181b;
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
 }
 
 .status {
   text-align: center;
-  margin-top: 12px;
-  font-size: 14px;
+  margin-top: 10px;
 }
-
-.success {
-  color: green;
-}
-
-.error {
-  color: red;
-}
-
 </style>
-
 </head>
-
 
 <body>
 
@@ -127,46 +101,27 @@ pre {
 
 <h1>OrderTag Generator</h1>
 
-<textarea
-  id="orderText"
-  placeholder="Paste order here...
+<textarea id="orderText"
+placeholder="Paste order here...
 
 User_Name
-Password
+Passwore
 Backup: Optional
-000 Robux"
-></textarea>
+0000 Robux"></textarea>
 
-<button
-  id="generateBtn"
-  onclick="generateOrder()"
->
+<button id="generateBtn" onclick="generateOrder()">
 Generate Order ID
 </button>
 
-<div
-  id="status"
-  class="status"
-></div>
+<div class="status" id="status"></div>
 
+<div class="result" id="result">
 
-<div
-  id="result"
-  class="result"
->
+<div class="orderId" id="orderId"></div>
 
-<div
-  id="orderId"
-  class="order-id"
-></div>
+<pre id="formattedOrder"></pre>
 
-<pre
-  id="formattedOrder"
-></pre>
-
-<button
-  onclick="copyOrder()"
->
+<button onclick="copyOrder()">
 Copy Order
 </button>
 
@@ -179,29 +134,26 @@ Copy Order
 
 <script>
 
-/*
-========================================
-PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-========================================
-*/
+const SUPABASE_URL =
+"https://tqpspaadbpspxdzdslvh.supabase.co";
 
-const API_URL =
-"https://script.google.com/macros/s/PASTE_YOUR_URL_HERE/exec";
+const SUPABASE_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxcHNwYWFkYnBzcHhkemRzbHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTM4MTgsImV4cCI6MjEwNDA4OTgxOH0.s7gcC5mf7BHKy0UT1mQuwwzkhYVVz5fbDr2_xJ-ln6k";
+
+const supabaseClient =
+supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 
 let currentOrder = "";
 
 
-/*
-Generate Order
-*/
-function generateOrder() {
+async function generateOrder() {
 
-  const text =
-    document
-      .getElementById("orderText")
-      .value
-      .trim();
+  const textarea =
+    document.getElementById("orderText");
 
   const button =
     document.getElementById("generateBtn");
@@ -209,16 +161,16 @@ function generateOrder() {
   const status =
     document.getElementById("status");
 
+  const text =
+    textarea.value.trim();
+
 
   if (!text) {
 
-    status.textContent =
-      "Please paste the order first.";
-
-    status.className =
-      "status error";
+    alert("Please paste the order first!");
 
     return;
+
   }
 
 
@@ -227,134 +179,89 @@ function generateOrder() {
   status.textContent =
     "Generating Order ID...";
 
-  status.className =
-    "status";
+
+  try {
+
+    const { data, error } =
+      await supabaseClient
+      .from("orders")
+      .insert({
+        order_text: text
+      })
+      .select("id")
+      .single();
 
 
-  const callbackName =
-    "orderCallback_" +
-    Date.now();
+    if (error) {
+
+      console.error(error);
+
+      throw error;
+
+    }
 
 
-  window[callbackName] =
-    function(data) {
+    const serial =
+      String(data.id).padStart(6, "0");
 
-      button.disabled = false;
-
-
-      if (!data.success) {
-
-        status.textContent =
-          "Error: " + data.error;
-
-        status.className =
-          "status error";
-
-        delete window[callbackName];
-
-        return;
-      }
+    const orderId =
+      "#SC-" + serial;
 
 
-      const orderId =
-        data.orderId;
+    currentOrder =
+      "Order ID: " +
+      orderId +
+      "\n\n" +
+      text;
 
 
-      currentOrder =
-        "Order ID: " +
-        orderId +
-        "\n\n" +
-        data.orderText;
+    document.getElementById("orderId")
+      .textContent = orderId;
 
 
-      document
-        .getElementById("orderId")
-        .textContent = orderId;
+    document.getElementById("formattedOrder")
+      .textContent = currentOrder;
 
 
-      document
-        .getElementById("formattedOrder")
-        .textContent = currentOrder;
+    document.getElementById("result")
+      .style.display = "block";
 
 
-      document
-        .getElementById("result")
-        .style.display = "block";
+    status.textContent =
+      "Order ID generated successfully!";
 
 
-      status.textContent =
-        "Order ID generated successfully!";
+  } catch (error) {
 
-      status.className =
-        "status success";
+    status.textContent =
+      "Error: " + error.message;
 
-
-      delete window[callbackName];
-
-    };
+  }
 
 
-  const script =
-    document.createElement("script");
-
-
-  script.src =
-    API_URL +
-    "?action=create" +
-    "&text=" +
-    encodeURIComponent(text) +
-    "&callback=" +
-    callbackName;
-
-
-  script.onerror =
-    function() {
-
-      button.disabled = false;
-
-      status.textContent =
-        "Connection error. Please try again.";
-
-      status.className =
-        "status error";
-
-      delete window[callbackName];
-
-    };
-
-
-  document.body.appendChild(script);
+  button.disabled = false;
 
 }
 
 
-/*
-Copy complete order
-*/
-function copyOrder() {
+async function copyOrder() {
 
-  if (!currentOrder) {
-    return;
+  try {
+
+    await navigator.clipboard
+      .writeText(currentOrder);
+
+    alert("Order copied!");
+
+  } catch {
+
+    alert("Copy failed!");
+
   }
-
-
-  navigator.clipboard
-    .writeText(currentOrder)
-    .then(function() {
-
-      alert("Order copied!");
-
-    })
-    .catch(function() {
-
-      alert("Copy failed.");
-
-    });
 
 }
 
 </script>
 
 </body>
-
 </html>
