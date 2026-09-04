@@ -1,219 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order ID Generator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<title>OrderTag Generator</title>
 
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f4f4f5;
-      color: #18181b;
-    }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    .container {
-      max-width: 650px;
-      margin: auto;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 5px 20px rgba(0,0,0,.08);
-    }
+body {
+  margin: 0;
+  padding: 20px;
+  background: #f4f4f5;
+  font-family: Arial, sans-serif;
+}
 
-    h1 {
-      margin-top: 0;
-      text-align: center;
-    }
+.container {
+  max-width: 650px;
+  margin: auto;
+}
 
-    textarea {
-      width: 100%;
-      min-height: 180px;
-      padding: 14px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      resize: vertical;
-      font-size: 15px;
-      outline: none;
-    }
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.08);
+}
 
-    textarea:focus {
-      border-color: #555;
-    }
+h1 {
+  text-align: center;
+  margin-top: 0;
+}
 
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      border: 0;
-      border-radius: 10px;
-      background: #18181b;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  resize: vertical;
+}
 
-    button:active {
-      transform: scale(.98);
-    }
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #111;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
 
-    .result {
-      display: none;
-      margin-top: 20px;
-    }
+button:disabled {
+  opacity: .5;
+}
 
-    .order-id {
-      text-align: center;
-      font-size: 26px;
-      font-weight: bold;
-      padding: 15px;
-      background: #f4f4f5;
-      border-radius: 10px;
-      margin-bottom: 12px;
-    }
+.result {
+  display: none;
+  margin-top: 20px;
+}
 
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      background: #18181b;
-      color: white;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
+.orderId {
+  text-align: center;
+  font-size: 25px;
+  font-weight: bold;
+  padding: 15px;
+  background: #eee;
+  border-radius: 10px;
+}
 
-    .history {
-      margin-top: 20px;
-    }
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #18181b;
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+}
 
-    .history-item {
-      background: #f4f4f5;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 8px;
-      font-size: 14px;
-    }
-
-    .clear {
-      background: #dc2626;
-      margin-top: 8px;
-    }
-  </style>
+.status {
+  text-align: center;
+  margin-top: 10px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <div class="card">
+<div class="card">
 
-    <h1>Order ID Generator</h1>
+<h1>OrderTag Generator</h1>
 
-    <textarea
-      id="orderText"
-      placeholder="Paste order here...
+<textarea id="orderText"
+placeholder="Paste order here...
 
-user_name
-passwore
+Shexychatgpt
+Ohyeahh
 Backup: Optional
-500 Robux"></textarea>
+69 Robux"></textarea>
 
-    <button onclick="generateOrder()">
-      Generate Order ID
-    </button>
+<button id="generateBtn" onclick="generateOrder()">
+Generate Order ID
+</button>
 
-    <div class="result" id="result">
+<div class="status" id="status"></div>
 
-      <div class="order-id" id="orderId"></div>
+<div class="result" id="result">
 
-      <pre id="formattedOrder"></pre>
+<div class="orderId" id="orderId"></div>
 
-      <button onclick="copyOrder()">
-        Copy Order
-      </button>
+<pre id="formattedOrder"></pre>
 
-    </div>
+<button onclick="copyOrder()">
+Copy Order
+</button>
 
-    <div class="history">
-      <h3>Recent Orders</h3>
-      <div id="historyList"></div>
+</div>
 
-      <button class="clear" onclick="clearHistory()">
-        Clear History
-      </button>
-    </div>
-
-  </div>
+</div>
 
 </div>
 
 
 <script>
 
-  const STORAGE_KEY = "order_serial_number";
+const SUPABASE_URL =
+"https://tqpspaadbpspxdzdslvh.supabase.co";
 
-  let currentOrder = "";
+const SUPABASE_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxcHNwYWFkYnBzcHhkemRzbHZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTM4MTgsImV4cCI6MjEwNDA4OTgxOH0.s7gcC5mf7BHKy0UT1mQuwwzkhYVVz5fbDr2_xJ-ln6k";
+
+const supabaseClient =
+supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 
-  function getSerial() {
+let currentOrder = "";
 
-    let number = localStorage.getItem(STORAGE_KEY);
 
-    if (!number) {
-      number = 0;
-    }
+async function generateOrder() {
 
-    return parseInt(number);
+  const textarea =
+    document.getElementById("orderText");
+
+  const button =
+    document.getElementById("generateBtn");
+
+  const status =
+    document.getElementById("status");
+
+  const text =
+    textarea.value.trim();
+
+
+  if (!text) {
+
+    alert("Please paste the order first!");
+
+    return;
 
   }
 
 
-  function generateOrder() {
+  button.disabled = true;
 
-    const text = document
-      .getElementById("orderText")
-      .value
-      .trim();
+  status.textContent =
+    "Generating Order ID...";
 
-    if (!text) {
-      alert("Please paste the order first!");
-      return;
+
+  try {
+
+    const { data, error } =
+      await supabaseClient
+      .from("orders")
+      .insert({
+        order_text: text
+      })
+      .select("id")
+      .single();
+
+
+    if (error) {
+
+      console.error(error);
+
+      throw error;
+
     }
 
 
-    let serial = getSerial();
+    const serial =
+      String(data.id).padStart(6, "0");
 
-    serial++;
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      serial
-    );
-
-
-    const id =
-      "#SC-" +
-      String(serial).padStart(6, "0");
+    const orderId =
+      "#SC-" + serial;
 
 
     currentOrder =
-      "Order ID: " + id +
+      "Order ID: " +
+      orderId +
       "\n\n" +
       text;
 
 
     document.getElementById("orderId")
-      .textContent = id;
+      .textContent = orderId;
 
 
     document.getElementById("formattedOrder")
@@ -224,137 +227,39 @@ Backup: Optional
       .style.display = "block";
 
 
-    saveHistory(id, text);
+    status.textContent =
+      "Order ID generated successfully!";
+
+
+  } catch (error) {
+
+    status.textContent =
+      "Error: " + error.message;
 
   }
 
 
-  function copyOrder() {
+  button.disabled = false;
 
-    navigator.clipboard
-      .writeText(currentOrder)
-      .then(() => {
-
-        alert("Order copied!");
-
-      });
-
-  }
+}
 
 
-  function saveHistory(id, text) {
+async function copyOrder() {
 
-    let history =
-      JSON.parse(
-        localStorage.getItem("order_history") || "[]"
-      );
+  try {
 
+    await navigator.clipboard
+      .writeText(currentOrder);
 
-    history.unshift({
+    alert("Order copied!");
 
-      id: id,
+  } catch {
 
-      text: text,
-
-      time: new Date().toLocaleString()
-
-    });
-
-
-    history =
-      history.slice(0, 20);
-
-
-    localStorage.setItem(
-      "order_history",
-      JSON.stringify(history)
-    );
-
-
-    showHistory();
+    alert("Copy failed!");
 
   }
 
-
-  function showHistory() {
-
-    const list =
-      document.getElementById("historyList");
-
-
-    const history =
-      JSON.parse(
-        localStorage.getItem("order_history") || "[]"
-      );
-
-
-    if (history.length === 0) {
-
-      list.innerHTML =
-        "<p>No orders yet.</p>";
-
-      return;
-
-    }
-
-
-    list.innerHTML = history
-      .map(order => `
-
-        <div class="history-item">
-
-          <strong>${escapeHtml(order.id)}</strong>
-
-          <br>
-
-          ${escapeHtml(order.time)}
-
-        </div>
-
-      `)
-      .join("");
-
-  }
-
-
-  function clearHistory() {
-
-    if (!confirm("Clear all history?")) {
-      return;
-    }
-
-
-    localStorage.removeItem(
-      "order_history"
-    );
-
-
-    localStorage.removeItem(
-      STORAGE_KEY
-    );
-
-
-    showHistory();
-
-    document.getElementById("result")
-      .style.display = "none";
-
-  }
-
-
-  function escapeHtml(text) {
-
-    const div =
-      document.createElement("div");
-
-    div.textContent = text;
-
-    return div.innerHTML;
-
-  }
-
-
-  showHistory();
+}
 
 </script>
 
