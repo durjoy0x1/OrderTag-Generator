@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order ID Generator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f4f5;
+      color: #18181b;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px rgba(0,0,0,.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      resize: vertical;
+      font-size: 15px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #555;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 10px;
+      background: #18181b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(.98);
+    }
+
+    .result {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .order-id {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      padding: 15px;
+      background: #f4f4f5;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #18181b;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .history {
+      margin-top: 20px;
+    }
+
+    .history-item {
+      background: #f4f4f5;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .clear {
+      background: #dc2626;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+
+    <h1>Order ID Generator</h1>
+
+    <textarea
+      id="orderText"
+      placeholder="Paste order here...
+
+user_name
+passwore
+Backup: Optional
+500 Robux"></textarea>
+
+    <button onclick="generateOrder()">
+      Generate Order ID
+    </button>
+
+    <div class="result" id="result">
+
+      <div class="order-id" id="orderId"></div>
+
+      <pre id="formattedOrder"></pre>
+
+      <button onclick="copyOrder()">
+        Copy Order
+      </button>
+
+    </div>
+
+    <div class="history">
+      <h3>Recent Orders</h3>
+      <div id="historyList"></div>
+
+      <button class="clear" onclick="clearHistory()">
+        Clear History
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  const STORAGE_KEY = "order_serial_number";
+
+  let currentOrder = "";
+
+
+  function getSerial() {
+
+    let number = localStorage.getItem(STORAGE_KEY);
+
+    if (!number) {
+      number = 0;
+    }
+
+    return parseInt(number);
+
+  }
+
+
+  function generateOrder() {
+
+    const text = document
+      .getElementById("orderText")
+      .value
+      .trim();
+
+    if (!text) {
+      alert("Please paste the order first!");
+      return;
+    }
+
+
+    let serial = getSerial();
+
+    serial++;
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      serial
+    );
+
+
+    const id =
+      "#SC-" +
+      String(serial).padStart(6, "0");
+
+
+    currentOrder =
+      "Order ID: " + id +
+      "\n\n" +
+      text;
+
+
+    document.getElementById("orderId")
+      .textContent = id;
+
+
+    document.getElementById("formattedOrder")
+      .textContent = currentOrder;
+
+
+    document.getElementById("result")
+      .style.display = "block";
+
+
+    saveHistory(id, text);
+
+  }
+
+
+  function copyOrder() {
+
+    navigator.clipboard
+      .writeText(currentOrder)
+      .then(() => {
+
+        alert("Order copied!");
+
+      });
+
+  }
+
+
+  function saveHistory(id, text) {
+
+    let history =
+      JSON.parse(
+        localStorage.getItem("order_history") || "[]"
+      );
+
+
+    history.unshift({
+
+      id: id,
+
+      text: text,
+
+      time: new Date().toLocaleString()
+
+    });
+
+
+    history =
+      history.slice(0, 20);
+
+
+    localStorage.setItem(
+      "order_history",
+      JSON.stringify(history)
+    );
+
+
+    showHistory();
+
+  }
+
+
+  function showHistory() {
+
+    const list =
+      document.getElementById("historyList");
+
+
+    const history =
+      JSON.parse(
+        localStorage.getItem("order_history") || "[]"
+      );
+
+
+    if (history.length === 0) {
+
+      list.innerHTML =
+        "<p>No orders yet.</p>";
+
+      return;
+
+    }
+
+
+    list.innerHTML = history
+      .map(order => `
+
+        <div class="history-item">
+
+          <strong>${escapeHtml(order.id)}</strong>
+
+          <br>
+
+          ${escapeHtml(order.time)}
+
+        </div>
+
+      `)
+      .join("");
+
+  }
+
+
+  function clearHistory() {
+
+    if (!confirm("Clear all history?")) {
+      return;
+    }
+
+
+    localStorage.removeItem(
+      "order_history"
+    );
+
+
+    localStorage.removeItem(
+      STORAGE_KEY
+    );
+
+
+    showHistory();
+
+    document.getElementById("result")
+      .style.display = "none";
+
+  }
+
+
+  function escapeHtml(text) {
+
+    const div =
+      document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+  }
+
+
+  showHistory();
+
+</script>
+
+</body>
+</html>
